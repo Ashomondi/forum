@@ -5,9 +5,9 @@ import "time"
 type Post struct {
 	ID int
 	UserID int
-	PostID int
+	Name string
+	Title string
 	Content string
-	name string
 	categories []Category
 	likes, dislikes int
 	CreatedAt time.Time
