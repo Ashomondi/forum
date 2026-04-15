@@ -9,6 +9,6 @@ type Comment struct {
 	ParentID        *int
 	Content         string
 	name            string
-	likes, dislikes int
+	Likes, Dislikes int
 	CreatedAt       time.Time
 }
