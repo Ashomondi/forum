@@ -24,7 +24,7 @@ func (s *ReactionService) React(r *Reaction) error {
 		return s.Repo.AddReaction(r)
 	}
 
-	// delete if reaction is same as before
+	//delete if reaction is same as before
 	if existing.Type == r.Type {
 		return s.Repo.DeleteReaction(r.UserID, r.PostID, r.CommentID)
 	}
