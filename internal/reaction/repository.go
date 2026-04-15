@@ -11,12 +11,6 @@ type ReactionRepository struct {
 }
 
 func (r *ReactionRepository) AddReaction(reaction *Reaction) error {
-	// safety check
-	if (reaction.PostID == nil && reaction.CommentID == nil) ||
-		(reaction.PostID != nil && reaction.CommentID != nil) {
-		return errors.New("reaction must belong to either post or comment")
-	}
-
 	_, err := r.DB.Exec(`
 	INSERT INTO reactions(user_id, post_id, comment_id, reaction_type)
 	VALUES(?,?,?,?)`,
@@ -25,11 +19,9 @@ func (r *ReactionRepository) AddReaction(reaction *Reaction) error {
 		reaction.CommentID,
 		reaction.Type,
 	)
-
 	if err != nil {
 		return fmt.Errorf("add reaction: %w", err)
 	}
-
 	return nil
 }
 
