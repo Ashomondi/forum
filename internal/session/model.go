@@ -3,7 +3,7 @@ package session
 import "time"
 
 type session struct{
-	ID int
+	UUID string
 	UserID int
 	CreatedAt time.Time
 	ExpiresAt time.Time
