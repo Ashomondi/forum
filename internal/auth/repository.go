@@ -2,6 +2,7 @@ package auth
 
 import (
 	"database/sql"
+	"errors"
 )
 
 type Repository struct {
@@ -28,7 +29,17 @@ func (r *Repository) GetUserByEmail(email string) (User, error) {
 	err := r.DB.QueryRow(
 		"SELECT id, username, email, password, created_at FROM users WHERE email = ?",
 		email,
-	).Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.CreatedAt)
+	).Scan(
+		&user.ID,
+		&user.Username,
+		&user.Email,
+		&user.Password,
+		&user.CreatedAt,
+	)
+
+	if err == sql.ErrNoRows {
+		return User{}, errors.New("user not found")
+	}
 
 	return user, err
 }
