@@ -107,10 +107,12 @@ func (r *sqliteRepo) GetTopLevelByPostWithReactions(postID, limit, offset int) (
 			c.post_id, 
 			c.content, 
 			c.created_at,
+			u.username,
 		COALESCE(SUM(CASE WHEN rx.reaction_type = 1 THEN 1 ELSE 0 END), 0) AS likes,
 		COALESCE(SUM(CASE WHEN rx.reaction_type = -1 THEN 1 ELSE 0 END), 0) AS dislikes
 		FROM comments c
 		LEFT JOIN reactions rx ON rx.comment_id = c.id
+		JOIN users u ON u.id = c.user_id
 		WHERE c.post_id = ? AND c.parent_id IS NULL
 		GROUP BY c.id
 		ORDER BY c.created_at DESC
@@ -139,10 +141,12 @@ func (r *sqliteRepo) GetRepliesByParentIDWithReactions(parentID int) ([]Comment,
 			c.post_id,
 			c.content,
 			c.created_at,
+			u.username,
 			COALESCE(SUM(CASE WHEN rx.reaction_type = 1 THEN 1 ELSE 0 END), 0) AS likes,
 			COALESCE(SUM(CASE WHEN rx.reaction_type = -1 THEN 1 ELSE 0 END), 0) AS dislikes
 		FROM comments c
 		LEFT JOIN reactions rx ON rx.comment_id = c.id
+		JOIN users u ON u.id = c.user_id
 		WHERE c.parent_id = ?
 		GROUP BY c.id
 		ORDER BY c.created_at ASC
@@ -174,6 +178,7 @@ func scanComments(rows *sql.Rows) ([]Comment, error) {
 			&c.PostID,
 			&c.Content,
 			&c.CreatedAt,
+			&c.name,
 			&c.Likes,
 			&c.Dislikes,
 		)
