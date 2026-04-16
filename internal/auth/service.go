@@ -30,7 +30,7 @@ func (s *Service) Register(user User) error {
 func (s *Service) Login(email, password string) (User, error) {
 	user, err := s.Repo.GetUserByEmail(email)
 	if err != nil {
-		return User{}, errors.New("Invalid email or password")
+		return User{}, errors.New("invalid email or password")
 	}
 	return user, nil
 }
