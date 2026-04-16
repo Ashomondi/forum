@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-type Handeler struct {
+type Handler struct {
 	Service *Service
 }
 
@@ -27,11 +27,10 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	var user User
-	json.NewDecoder(r.Body).Decode(&user)
 
-	loggedUser, err := h.Service.login(user.Email, user.Password)
-	if err != nill {
-		http.Error(w, "Invalid credentials, http.StatusUnauthorized")
+	loggedUser, err := h.Service.Login(user.Email, user.Password)
+	if err != nil {
+		http.Error(w, "Invalid Credentials", http.StatusUnauthorized)
 		return
 	}
 	json.NewEncoder(w).Encode(loggedUser)
