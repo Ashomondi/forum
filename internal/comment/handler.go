@@ -13,7 +13,7 @@ type sessionService interface {
 }
 
 type Handler struct {
-	service Service
+	service        Service
 	sessionService sessionService
 }
 

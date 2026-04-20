@@ -7,10 +7,10 @@ import (
 )
 
 var (
-    ErrNotFound   = errors.New("not found")
-    ErrInvalidRef = errors.New("invalid reference")
-    ErrConflict   = errors.New("conflict")
-    ErrInternal   = errors.New("internal error")
+	ErrNotFound   = errors.New("not found")
+	ErrInvalidRef = errors.New("invalid reference")
+	ErrConflict   = errors.New("conflict")
+	ErrInternal   = errors.New("internal error")
 )
 
 type Repository interface {
@@ -184,7 +184,7 @@ func scanComments(rows *sql.Rows) ([]Comment, error) {
 		)
 		if err != nil {
 			return nil, err
-		}	
+		}
 
 		comments = append(comments, c)
 	}
@@ -197,9 +197,9 @@ func scanComments(rows *sql.Rows) ([]Comment, error) {
 }
 
 func isConstraintError(err error) bool {
-    var sqliteErr interface{ Error() string }
-    if errors.As(err, &sqliteErr) {
-        return strings.Contains(sqliteErr.Error(), "FOREIGN KEY constraint failed")
-    }
-    return false
+	var sqliteErr interface{ Error() string }
+	if errors.As(err, &sqliteErr) {
+		return strings.Contains(sqliteErr.Error(), "FOREIGN KEY constraint failed")
+	}
+	return false
 }
