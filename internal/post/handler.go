@@ -8,11 +8,17 @@ import (
 )
 
 type PostHandler struct {
-	service *PostService // getting logged-in users
+	service        *PostService // getting logged-in users
+	sessionService *SessionService
+}	
+
+type CreatePostRequest struct {
+	Title string `json:"Title"`
+	Content string `json:"Content"`
+	Category string `json:"category"`
+
 }
-
-
-//Routes inside the Handler it get to decide which action to take based on the http method. 
+// Routes inside the Handler it get to decide which action to take based on the http method.
 func (handler *PostHandler) HandlePosts(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
@@ -25,22 +31,23 @@ func (handler *PostHandler) HandlePosts(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 	}
 }
-//returns a list of posts
-func (handler *PostHandler) GetPosts(w http.ResponseWriter, r *http.Request) {
-	category := r.URL.Query().Get("category") //filter by category
-	user := r.URL.Query().Get("user") // filter by user
 
-	posts, err := handler.service.GetAllPosts(category, user)
+// returns a list of posts
+func (handler *PostHandler) GetPosts(w http.ResponseWriter, r *http.Request) {
+	category := r.URL.Query().Get("category") // filter by category
+	user := r.URL.Query().Get("user")         // filter by user
+
+	posts, err := handler.service.GetPosts(category, user)
 	if err != nil {
 		http.Error(w, "Failed to fetch posts", http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("content-type","application/json")
+	w.Header().Set("content-type", "application/json")
 	json.NewEncoder(w).Encode(posts)
 }
 
-//return a single post by that specific id
+// return a single post by that specific id
 func (handler *PostHandler) GetPostByID(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method Not Allowed", http.StatusBadRequest)
@@ -52,7 +59,7 @@ func (handler *PostHandler) GetPostByID(w http.ResponseWriter, r *http.Request) 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		http.Error(w, "Invalid Post ID", http.StatusBadRequest)
-		return 
+		return
 	}
 
 	post, err := handler.service.GetPostByID(id)
@@ -65,9 +72,32 @@ func (handler *PostHandler) GetPostByID(w http.ResponseWriter, r *http.Request) 
 }
 
 func (handler *PostHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
-	panic("unimplemented")
-}
+	// getting session cookie
+	cookie, err := r.Cookie("session_id")
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 
-func (handler *PostHandler) DeletePost(w http.ResponseWriter, r *http.Request) {
-	panic("unimplemented")
+	// Validate session
+	User, err := handler.sessionService.ValidateSession(cookie.Value)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// parsing request body
+	var req CreatePostRequest
+	err = json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		http.Error(w, "Invalid Request", http.StatusBadRequest)
+		return
+	}
+	// Calling service
+	err = handler.service.CreatePost(User.ID, req.Title, req.Content, req.Category)
+	if err != nil {
+		http.Error(w, "Failed to create post", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
 }
