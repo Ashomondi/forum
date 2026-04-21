@@ -19,7 +19,7 @@
         async function login() {
             const res = await fetch('/login',{
                 method: 'POST',
-                headers: {'content-type': 'application/json'},
+                headers: {'content-type': 'application/json' },
                 body: JSON.stringify({
                     email: document.getElementById('email').value,
                     password: document.getElementById('password').value,
@@ -28,7 +28,7 @@
 
             if (res.ok) {
                 alert("login successfull");
-                window/location.href= "/"
+                window.location.href= "/"
             }else {
                 alert("Invalid creadentials");
             }
