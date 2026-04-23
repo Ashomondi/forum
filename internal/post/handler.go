@@ -9,7 +9,7 @@ import (
 )
 
 type PostHandler struct {
-	service        *PostService 
+	Service        *PostService 
 }	
 
 type CreatePostRequest struct {
@@ -19,6 +19,9 @@ type CreatePostRequest struct {
 
 }
 
+func NewPostHandler(service *PostService) *PostHandler {
+	return &PostHandler{Service: service}
+}
 
 // Routes inside the Handler it get to decide which action to take based on the http method.
 func (handler *PostHandler) HandlePosts(w http.ResponseWriter, r *http.Request) {
@@ -39,7 +42,7 @@ func (handler *PostHandler) GetPosts(w http.ResponseWriter, r *http.Request) {
 	category := r.URL.Query().Get("category") // filter by category
 	user := r.URL.Query().Get("user")         // filter by user
 
-	posts, err := handler.service.GetPosts(category, user)
+	posts, err := handler.Service.GetPosts(category, user)
 	if err != nil {
 		http.Error(w, "Failed to fetch posts", http.StatusInternalServerError)
 		return
@@ -64,7 +67,7 @@ func (handler *PostHandler) GetPostByID(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	post, err := handler.service.GetPostByID(id)
+	post, err := handler.Service.GetPostByID(id)
 	if err != nil {
 		http.Error(w, "Post Not Found", http.StatusNotFound)
 		return
@@ -87,7 +90,7 @@ func (handler *PostHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = handler.service.CreatePost(userID, req.Title, req.Content, req.Category)
+	err = handler.Service.CreatePost(userID, req.Title, req.Content, req.Category)
 	if err != nil {
 		http.Error(w, "Failed to create post", http.StatusInternalServerError)
 		return

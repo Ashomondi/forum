@@ -15,8 +15,8 @@ type UserRepository struct {
 	db *sql.DB
 }
 
-type SessionRepository struct {
-	db *sql.DB
+func NewPostRepository(db *sql.DB) *PostRepository {
+	return &PostRepository{db: db}
 }
 
 func (r *PostRepository) GetPost() ([]Post, error) {

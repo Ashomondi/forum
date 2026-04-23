@@ -7,6 +7,7 @@ import (
 
 	"forum/internal/auth"
 	"forum/internal/comment"
+	"forum/internal/post"
 	"forum/internal/session"
 	"forum/internal/shared/middleware"
 
@@ -37,7 +38,13 @@ func main() {
 	commentService := comment.NewService(commentRepo)
 	commentHandler := comment.NewHandler(commentService, sessionService)
 	comment.RegisterRoutes(commentHandler, requireAuth)
+//post
 
+	postRepo:= post.NewPostRepository(db)
+	postservice := post.NewPostService(postRepo)
+	posthandler := post.NewPostHandler(postservice)
+	post.RegisterPostRoutes(posthandler, requireAuth)
+	
 	log.Println("🚀 Server running on http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
