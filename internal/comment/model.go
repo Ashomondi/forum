@@ -12,8 +12,9 @@ type Comment struct {
 	PostID          int
 	ParentID        *int
 	Content         string
-	name            string
+	Name            string
 	Likes, Dislikes int
+	ReplyCount      int
 	CreatedAt       time.Time
 }
 
@@ -23,4 +24,14 @@ type CommentsSectionData struct {
 	CurrentUser auth.User
 	Comments    []Comment
 	TotalCount  int
+}
+
+type CommentView struct {
+	ID         int    `json:"id"`
+	AuthorName string `json:"authorName"`
+	Body       string `json:"body"`
+	Likes      int    `json:"likes"`
+	Dislikes   int    `json:"dislikes"`
+	CreatedAt  string `json:"createdAt"`
+	ReplyCount int    `json:"replyCount"`
 }
