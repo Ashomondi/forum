@@ -18,6 +18,7 @@ type Repository interface {
 	GetTopLevelByPostWithReactions(postID, limit, offset int) ([]Comment, error)
 	GetRepliesByParentIDWithReactions(parentID int) ([]Comment, error)
 	GetByID(id int) (*Comment, error)
+	GetCountByPostID(postID int) (int, error)
 }
 
 type sqliteRepo struct {
@@ -164,6 +165,23 @@ func (r *sqliteRepo) GetRepliesByParentIDWithReactions(parentID int) ([]Comment,
 	}
 
 	return comments, nil
+}
+
+func (r *sqliteRepo) GetCountByPostID(postID int) (int, error) {
+	var count int
+
+	query := `
+		SELECT COUNT(*)
+		FROM comments
+		WHERE post_id = ?
+	`
+
+	err := r.db.QueryRow(query, postID).Scan(&count)
+	if err != nil {
+		return 0, ErrInternal
+	}
+
+	return count, nil
 }
 
 func scanComments(rows *sql.Rows) ([]Comment, error) {

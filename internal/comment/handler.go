@@ -2,19 +2,19 @@ package comment
 
 import (
 	"errors"
-	"forum/internal/session"
-	"forum/internal/shared/middleware"
 	"net/http"
 	"strconv"
+
+	"forum/internal/session"
+	"forum/internal/shared/middleware"
 )
 
 type Handler struct {
-	service        Service
-	sessionService *session.Service
+	service Service
 }
 
 func NewHandler(service Service, sessionService *session.Service) *Handler {
-	return &Handler{service: service, sessionService: sessionService}
+	return &Handler{service: service}
 }
 
 // GET /posts/{id}/comments
@@ -32,11 +32,14 @@ func (h *Handler) GetComments(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	comments, err := h.service.GetTopLevelComments(postID, page)
+	comments, count, err := h.service.GetTopLevelComments(postID, page)
 	if err != nil {
 		http.Error(w, "could not fetch comments", http.StatusInternalServerError)
 		return
 	}
+
+	// TODO: Use count
+	_ = count
 
 	// TODO: Render template with comments
 	_ = comments
