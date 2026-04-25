@@ -123,6 +123,30 @@ func (r *PostRepository) GetPostByUser(userID int) ([]Post, error) {
 	return posts, nil
 }
 
+func (r *PostRepository) GetPostsLikedByUser(userID int) ([]Post, error) {
+	rows, err := r.db.Query(`
+		SELECT p.id, p.user_id, p.title, p.content, p.created_at
+		FROM posts p
+		JOIN reactions re ON p.id = re.post_id
+		WHERE re.user_id = ? AND re.reaction_type = 1
+	`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []Post
+	for rows.Next() {
+		var p Post
+		err := rows.Scan(&p.ID, &p.UserID, &p.Title, &p.Content, &p.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		posts = append(posts, p)
+	}
+	return posts, nil
+}
+
 func (r *PostRepository) CreatePost(userID int, title, content string) (int, error) {
 	result, err := r.db.Exec(`
 		INSERT INTO posts (user_id, title, content, created_at)

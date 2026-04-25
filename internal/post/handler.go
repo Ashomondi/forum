@@ -38,10 +38,31 @@ func (handler *PostHandler) HandlePosts(w http.ResponseWriter, r *http.Request) 
 
 // returns a list of posts
 func (handler *PostHandler) GetPosts(w http.ResponseWriter, r *http.Request) {
-	category := r.URL.Query().Get("category") // filter by category
-	user := r.URL.Query().Get("user")         // filter by user
+	category := r.URL.Query().Get("category")
+	user := r.URL.Query().Get("user")
+	liked := r.URL.Query().Get("liked")
 
-	posts, err := handler.Service.GetPosts(category, user)
+	var likedBy string
+	if liked == "true" {
+		userID, ok := middleware.GetUserID(r)
+		if !ok {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+		likedBy = strconv.Itoa(userID)
+	}
+
+	// Also support "user=me" for created posts
+	if user == "me" {
+		userID, ok := middleware.GetUserID(r)
+		if !ok {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+		user = strconv.Itoa(userID)
+	}
+
+	posts, err := handler.Service.GetPosts(category, user, likedBy)
 	if err != nil {
 		http.Error(w, "Failed to fetch posts", http.StatusInternalServerError)
 		return

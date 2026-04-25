@@ -54,7 +54,7 @@ func (s *PostService) buildPostResponse(post Post) (PostResponse, error) {
 	}, nil
 }
 
-func (s *PostService) GetPosts(category, user string) ([]PostResponse, error) {
+func (s *PostService) GetPosts(category, user, likedBy string) ([]PostResponse, error) {
 	var posts []Post
 	var err error
 
@@ -67,6 +67,12 @@ func (s *PostService) GetPosts(category, user string) ([]PostResponse, error) {
 			return nil, err
 		}
 		posts, err = s.postRepo.GetPostByUser(userID)
+	} else if likedBy != "" {
+		userID, err := strconv.Atoi(likedBy)
+		if err != nil {
+			return nil, err
+		}
+		posts, err = s.postRepo.GetPostsLikedByUser(userID)
 	} else {
 		posts, err = s.postRepo.GetPost()
 	}
