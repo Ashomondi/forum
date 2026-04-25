@@ -8,6 +8,7 @@ import (
 	"forum/internal/auth"
 	"forum/internal/comment"
 	"forum/internal/post"
+	"forum/internal/reaction"
 	"forum/internal/session"
 	"forum/internal/shared/middleware"
 
@@ -42,8 +43,9 @@ func main() {
 	postRepo := post.NewPostRepository(db)
 	catRepo := post.NewCategoryRepository(db)
 	userRepo := post.NewUserRepository(db)
+	reactionRepo := &reaction.ReactionRepository{DB: db}
 	
-	postservice := post.NewPostService(postRepo, catRepo, userRepo)
+	postservice := post.NewPostService(postRepo, catRepo, userRepo, reactionRepo)
 	posthandler := post.NewPostHandler(postservice)
 	post.RegisterPostRoutes(posthandler, requireAuth)
 	
