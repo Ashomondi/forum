@@ -109,7 +109,8 @@ func (h *Handler) CreateComment(w http.ResponseWriter, r *http.Request) {
 
 	content := r.FormValue("content")
 
-	if err := h.service.CreateComment(userID, postID, content, nil); err != nil {
+	comment, err := h.service.CreateComment(userID, postID, content, nil)
+	if err != nil {
 		switch {
 		case errors.Is(err, ErrEmptyContent):
 			http.Error(w, "comment cannot be empty", http.StatusBadRequest)
@@ -121,7 +122,13 @@ func (h *Handler) CreateComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/posts/"+strconv.Itoa(postID)+"/comments", http.StatusSeeOther)
+	view := toCommentView(*comment)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]any{
+		"comment": view,
+	})
 }
 
 // GET /comments/{id}/replies

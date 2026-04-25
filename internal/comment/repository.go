@@ -72,15 +72,15 @@ func (r *sqliteRepo) GetByID(id int) (*Comment, error) {
 }
 
 func (r *sqliteRepo) Create(comment *Comment) error {
-	query := `INSERT INTO comments (user_id, post_id, parent_id, content) VALUES (?, ?, ?, ?)`
-
-	result, err := r.db.Exec(
+	query := `INSERT INTO comments (user_id, post_id, parent_id, content) VALUES (?, ?, ?, ?) RETURNING id, created_at`
+	err := r.db.QueryRow(
 		query,
 		comment.UserID,
 		comment.PostID,
 		comment.ParentID, // can be nil. nil becomes NULL
 		comment.Content,
-	)
+	).Scan(&comment.ID, &comment.CreatedAt)
+
 	if err != nil {
 		if isConstraintError(err) {
 			log.Println("invalid reference:", err)
@@ -88,15 +88,8 @@ func (r *sqliteRepo) Create(comment *Comment) error {
 		}
 		log.Println("unexpected database error:", err)
 		return ErrInternal
-	}
+	}	
 
-	id, err := result.LastInsertId()
-	if err != nil {
-		log.Println("unexpected database error:", err)
-		return ErrInternal
-	}
-
-	comment.ID = int(id)
 	return nil
 }
 
