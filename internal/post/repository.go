@@ -19,6 +19,14 @@ func NewPostRepository(db *sql.DB) *PostRepository {
 	return &PostRepository{db: db}
 }
 
+func NewCategoryRepository(db *sql.DB) *CategoryRepository {
+	return &CategoryRepository{db: db}
+}
+
+func NewUserRepository(db *sql.DB) *UserRepository {
+	return &UserRepository{db: db}
+}
+
 func (r *PostRepository) GetPost() ([]Post, error) {
 	row, err := r.db.Query("SELECT id, user_id, title, content, created_at FROM posts")
 	if err != nil {

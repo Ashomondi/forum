@@ -15,8 +15,12 @@ var (
 	ErrEmptyContent = errors.New("content cannot be empty")
 )	
 
-func NewPostService(repo *PostRepository) *PostService {
-	return &PostService{postRepo: repo}
+func NewPostService(postRepo *PostRepository, catRepo *CategoryRepository, userRepo *UserRepository) *PostService {
+	return &PostService{
+		postRepo:     postRepo,
+		categoryRepo: catRepo,
+		userRepo:     userRepo,
+	}
 }
 func (s *PostService) buildPostResponse(post Post) (PostResponse, error) {
 	username, err := s.userRepo.GetUsernameByID(post.UserID)

@@ -39,9 +39,11 @@ func main() {
 	commentHandler := comment.NewHandler(commentService, sessionService)
 	comment.RegisterRoutes(commentHandler, requireAuth)
 //post
-
-	postRepo:= post.NewPostRepository(db)
-	postservice := post.NewPostService(postRepo)
+	postRepo := post.NewPostRepository(db)
+	catRepo := post.NewCategoryRepository(db)
+	userRepo := post.NewUserRepository(db)
+	
+	postservice := post.NewPostService(postRepo, catRepo, userRepo)
 	posthandler := post.NewPostHandler(postservice)
 	post.RegisterPostRoutes(posthandler, requireAuth)
 	
