@@ -142,7 +142,7 @@ function fLoadReplies(commentID, btn) {
   if (container.dataset.loaded) {
     const isHidden = container.style.display === 'none';
     container.style.display = isHidden ? 'flex' : 'none';
-    btn.textContent = isHidden ? '▲ hide replies' : container.dataset.label;
+    btn.textContent = isHidden ? '▲ hide replies' : btn.dataset.label;
     return;
   }
  
@@ -162,7 +162,7 @@ function fLoadReplies(commentID, btn) {
  
       const label = replies.length === 1 ? '1 reply' : replies.length + ' replies';
       container.dataset.loaded = 'true';
-      container.dataset.label  = label;
+      btn.dataset.label = label;
       container.style.display  = 'flex';
  
       btn.textContent = '▲ hide replies';
@@ -174,7 +174,7 @@ function fLoadReplies(commentID, btn) {
     });
 }
 
-/* ── Submit a reply to a comment ── */
+// submit a reply to a comment
 function fSubmitReply(parentID, textareaID, repliesContainerID) {
   const textarea  = document.getElementById(textareaID);
   const container = document.getElementById(repliesContainerID);
@@ -205,7 +205,7 @@ function fSubmitReply(parentID, textareaID, repliesContainerID) {
       container.dataset.loaded = 'true';
       container.appendChild(fRenderReply(data.comment));
  
-      /* update or create the view-replies button */
+      // update or create the view-replies button
       const viewBtn = document.getElementById('f-view-replies-' + parentID);
       if (viewBtn) {
         const prev  = parseInt(viewBtn.dataset.label || '0', 10);

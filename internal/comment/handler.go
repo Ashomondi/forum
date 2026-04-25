@@ -124,11 +124,15 @@ func (h *Handler) CreateComment(w http.ResponseWriter, r *http.Request) {
 
 	view := toCommentView(*comment)
 
+	resp := struct{
+		CommentView CommentView `json:"comment"`
+	}{
+		CommentView: view,
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]any{
-		"comment": view,
-	})
+	json.NewEncoder(w).Encode(resp)
 }
 
 // GET /comments/{id}/replies
@@ -187,7 +191,8 @@ func (h *Handler) CreateReply(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.service.CreateComment(userID, postID, content, &parentID); err != nil {
+	comment, err := h.service.CreateComment(userID, postID, content, &parentID)
+	if err != nil {
 		switch {
 		case errors.Is(err, ErrEmptyContent):
 			http.Error(w, "reply cannot be empty", http.StatusBadRequest)
@@ -203,5 +208,15 @@ func (h *Handler) CreateReply(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/posts/"+strconv.Itoa(postID)+"/comments", http.StatusSeeOther)
+	view := toCommentView(*comment)
+	
+	resp := struct{
+		CommentView CommentView `json:"comment"`
+	}{
+		CommentView: view,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(resp)
 }
