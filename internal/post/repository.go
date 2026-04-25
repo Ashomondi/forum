@@ -31,7 +31,10 @@ func (r *PostRepository) GetPost() ([]Post, error) {
 	for row.Next() {
 		var p Post
 
-		row.Scan(&p.ID, &p.Title, &p.Content, &p.CreatedAt)
+		err := row.Scan(&p.ID, &p.UserID, &p.Title, &p.Content, &p.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
 		post = append(post, p)
 	}
 	return post, nil
@@ -174,6 +177,24 @@ func (r *CategoryRepository) GetByPostID(postID int) ([]Category, error) {
 		categories = append(categories, c)
 	}
 
+	return categories, nil
+}
+
+func (r *CategoryRepository) GetAllCategories() ([]Category, error) {
+	rows, err := r.db.Query("SELECT id, name FROM categories")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var categories []Category
+	for rows.Next() {
+		var c Category
+		if err := rows.Scan(&c.ID, &c.Name); err != nil {
+			return nil, err
+		}
+		categories = append(categories, c)
+	}
 	return categories, nil
 }
 

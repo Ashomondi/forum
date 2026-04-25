@@ -112,3 +112,7 @@ func (s *PostService) CreatePost(userID int, title, content string, categories [
 
 	return nil
 }
+
+func (s *PostService) GetAllCategories() ([]Category, error) {
+	return s.categoryRepo.GetAllCategories()
+}
