@@ -49,3 +49,16 @@ func (r *Repository) GetUserByEmail(email string) (User, error) {
 
 	return user, err
 }
+// auth/repository.go
+
+func (r *Repository) GetUserByID(id int) (User, error) {
+    var user User
+    // Adjust the query to match your actual database column names
+    query := "SELECT id, username, email, password_hash FROM users WHERE id = ?"
+    
+    err := r.DB.QueryRow(query, id).Scan(&user.ID, &user.Username, &user.Email, &user.Password)
+    if err != nil {
+        return User{}, err // Returns error if not found or DB failure
+    }
+    return user, nil
+}

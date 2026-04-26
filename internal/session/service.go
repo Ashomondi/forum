@@ -2,6 +2,7 @@ package session
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -26,8 +27,12 @@ func (s *Service) StartSession(userid int) (string, error) {
 	created := time.Now()
 	// set the expiration time for the token to 24 hrs after creation
 	expires := time.Now().Add(24 * time.Hour)
+	err := s.repo.DeleteAllUserSessions(userid)
+	if err != nil {
+		return "", err
+	}
 	// save this in the database repository
-	err := s.repo.CreateSessionRepository(token, userid, created, expires)
+	err = s.repo.CreateSessionRepository(token, userid, created, expires)
 	if err != nil {
 		return "", err
 	}
@@ -37,6 +42,7 @@ func (s *Service) StartSession(userid int) (string, error) {
 func (s *Service) ValidateSession(token string) (int, error) {
 	userID, expiresAt, err := s.repo.Get(token)
 	if err != nil {
+		fmt.Println("DEBUG: Session NOT found in DB for token:", token)
 		return 0, err
 	}
 	// check if current time is equal to expiry time
@@ -46,6 +52,7 @@ func (s *Service) ValidateSession(token string) (int, error) {
 	}
 	return userID, nil
 }
+
 func (s *Service) DeleteSession(token string) error {
 	return s.repo.Delete(token)
 }
