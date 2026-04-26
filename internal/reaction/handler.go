@@ -6,7 +6,6 @@ import (
 	"strconv"
 )
 
-// Handler holds dependencies
 type Handler struct {
 	ReactionService *ReactionService
 }
@@ -15,21 +14,20 @@ func NewHandler(service *ReactionService) *Handler {
 	return &Handler{ReactionService: service}
 }
 
-// React handles like/dislike actions
 func (h *Handler) React(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// get user from context (set by middleware)
+	// Auth check
 	userID, ok := middleware.GetUserID(r)
 	if !ok {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	// parse form data
+	// Parse form
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "invalid form", http.StatusBadRequest)
 		return
@@ -37,26 +35,35 @@ func (h *Handler) React(w http.ResponseWriter, r *http.Request) {
 
 	reactionType := r.FormValue("type")
 
+	// Validate reaction type
+	if reactionType != "like" && reactionType != "dislike" {
+		http.Error(w, "invalid reaction type", http.StatusBadRequest)
+		return
+	}
+
 	var postID *int
 	var commentID *int
 
-	// parse post_id
+	// Parse post_id
 	if pid := r.FormValue("post_id"); pid != "" {
-		id, err := strconv.Atoi(pid)
-		if err == nil {
+		if id, err := strconv.Atoi(pid); err == nil {
 			postID = &id
 		}
 	}
 
-	// parse comment_id
+	// Parse comment_id
 	if cid := r.FormValue("comment_id"); cid != "" {
-		id, err := strconv.Atoi(cid)
-		if err == nil {
+		if id, err := strconv.Atoi(cid); err == nil {
 			commentID = &id
 		}
 	}
 
-	// build reaction model
+	// Must target something
+	if postID == nil && commentID == nil {
+		http.Error(w, "no target provided", http.StatusBadRequest)
+		return
+	}
+
 	reaction := &Reaction{
 		UserID:    userID,
 		PostID:    postID,
@@ -64,13 +71,17 @@ func (h *Handler) React(w http.ResponseWriter, r *http.Request) {
 		Type:      reactionType,
 	}
 
-	// call service
-	err := h.ReactionService.React(reaction)
-	if err != nil {
+	// Business logic
+	if err := h.ReactionService.React(reaction); err != nil {
 		http.Error(w, "failed to react", http.StatusInternalServerError)
 		return
 	}
 
-	// redirect back to previous page
-	http.Redirect(w, r, r.Referer(), http.StatusSeeOther)
+	// Redirect back
+	ref := r.Referer()
+	if ref == "" {
+		ref = "/" // fallback
+	}
+
+	http.Redirect(w, r, ref, http.StatusSeeOther)
 }
