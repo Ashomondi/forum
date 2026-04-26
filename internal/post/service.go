@@ -3,7 +3,6 @@ package post
 import (
 	"errors"
 	"strconv"
-	"errors"
 	"forum/internal/reaction"
 )
 
