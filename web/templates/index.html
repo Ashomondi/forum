@@ -4,253 +4,32 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>The Scholarly Forum</title>
-
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-
-  <style>
-    body { font-family: Inter, sans-serif; }
-  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
 </head>
 
-<body class="bg-gray-50 text-gray-900">
+<body>
 
-<!-- Navbar -->
-<header class="bg-white border-b">
-  <div class="max-w-6xl mx-auto flex items-center justify-between px-6 py-4">
-    <!-- Site Title -->
-    <h1 class="text-xl font-bold text-indigo-700">The Scholarly Forum</h1>
+{{ template "navbar" . }}
 
-    <!-- Navigation Links -->
-    <nav class="space-x-6 text-sm font-medium">
-      <a href="/" class="text-indigo-700">Home</a>
-      <a href="/login" class="text-gray-600 hover:text-indigo-700">Login</a>
-      <a href="/register" class="text-gray-600 hover:text-indigo-700">Register</a>
-    </nav>
-  </div>
-</header>
+{{ template "hero" . }}
 
-<!-- Hero -->
-<section class="max-w-6xl mx-auto px-6 py-12">
-  <h2 class="text-3xl font-bold mb-3">Thoughtful discussion, curated.</h2>
-  <p class="text-gray-600 max-w-2xl">
-    A place for meaningful conversations across philosophy, science, art, and history.
-  </p>
-</section>
-
-<!-- create post -->
-<section class="max-w-6xl mx-auto px-6 mb-10">
-  <div class="bg-white p-6 rounded-lg border">
-
-    <!-- Form Title -->
-    <h3 class="text-lg font-semibold mb-4">Create a Post</h3>
-
-    <!-- Post Creation Form -->
-    <form id="postForm" class="space-y-4">
-      
-      <input type="text" id="title" placeholder="Post title"
-        class="w-full border rounded px-4 py-2" required />
-
-      <textarea id="content" placeholder="Write your thoughts..."
-        class="w-full border rounded px-4 py-2" rows="4" required></textarea>
-
-      <!-- Category Selection (Checkboxes are injected here via JS) -->
-      <div>
-        <span class="block text-sm font-medium text-gray-700 mb-2">Categories</span>
-        <div id="createPostCategories" class="flex flex-wrap gap-4">
-          <!-- Dynamic checkboxes will be injected here -->
-        </div>
-      </div>
-
-      <button type="submit"
-        class="bg-indigo-600 text-white px-6 py-2 rounded">
-        Post
-      </button>
-
-    </form>
-
-  </div>
-</section>
+{{ template "create_post" . }}
 
 <!-- Feed Container -->
-<div class="max-w-6xl mx-auto px-6 pb-16 grid grid-cols-1 md:grid-cols-4 gap-8">
+<div class="main-layout">
   
-  <!-- Sidebar: Categories -->
-  <aside class="md:col-span-1 space-y-4">
-    <div class="bg-white p-6 rounded-lg border">
-      <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4">Categories</h3>
-      <ul id="categoryList" class="space-y-2">
-        <li>
-          <button onclick="loadPosts({})" class="w-full text-left text-sm text-indigo-600 font-medium hover:underline">
-            All Posts
-          </button>
-        </li>
-        <li>
-          <button onclick="loadPosts({user: 'me'})" class="w-full text-left text-sm text-gray-600 hover:text-indigo-700 transition">
-            👤 My Posts
-          </button>
-        </li>
-        <li>
-          <button onclick="loadPosts({liked: true})" class="w-full text-left text-sm text-gray-600 hover:text-indigo-700 transition">
-            ❤️ Liked Posts
-          </button>
-        </li>
-        <hr class="my-2 border-gray-100">
-        <!-- Categories will be injected here -->
-      </ul>
-    </div>
-  </aside>
+{{ template "sidebar" . }}
 
   <!-- Main Feed -->
-  <main id="postFeed" class="md:col-span-3 space-y-6">
-    <div class="text-center py-10 text-gray-500 italic">Loading posts...</div>
+  <main id="postFeed">
+    <div class="empty-state">Loading posts...</div>
   </main>
 </div>
 
-<!-- Footer -->
-<footer class="bg-white border-t py-6">
-  <div class="max-w-6xl mx-auto px-6 text-center text-sm text-gray-500">
-    © 2026 The Scholarly Forum
-  </div>
-</footer>
+{{ template "footer" . }}
 
-<script>
-// --- Data Loading Functions ---
-
-/**
- * Fetches all categories from the server and populates:
- * 1. The sidebar filter list
- * 2. The post creation form checkboxes
- */
-async function loadCategories() {
-  try {
-    const res = await fetch("/categories");
-    const categories = await res.json();
-    const list = document.getElementById("categoryList");
-    const formCategories = document.getElementById("createPostCategories");
-
-    categories.forEach(cat => {
-      // 1. Add to Sidebar (Filters)
-      const li = document.createElement("li");
-      li.innerHTML = `
-        <button onclick="loadPosts({category: '${cat.Name}'})" class="w-full text-left text-sm text-gray-600 hover:text-indigo-700 transition">
-          # ${cat.Name}
-        </button>
-      `;
-      list.appendChild(li);
-
-      // 2. Add to Create Post Form (Checkboxes)
-      const label = document.createElement("label");
-      label.className = "inline-flex items-center";
-      label.innerHTML = `
-        <input type="checkbox" name="categories" value="${cat.Name}" class="form-checkbox text-indigo-600 rounded">
-        <span class="ml-2 text-sm text-gray-700">${cat.Name}</span>
-      `;
-      formCategories.appendChild(label);
-    });
-  } catch (err) {
-    console.error("Failed to load categories:", err);
-  }
-}
-
-/**
- * Fetches and displays posts. 
- * filter: { category?: string, user?: string, liked?: boolean }
- */
-async function loadPosts(filter = {}) {
-  const feed = document.getElementById("postFeed");
-  feed.innerHTML = '<div class="text-center py-10 text-gray-500 italic">Loading...</div>';
-
-  try {
-    let queryParams = new URLSearchParams();
-    if (filter.category) queryParams.append("category", filter.category);
-    if (filter.user) queryParams.append("user", filter.user);
-    if (filter.liked) queryParams.append("liked", "true");
-
-    const url = "/posts" + (queryParams.toString() ? "?" + queryParams.toString() : "");
-
-    const res = await fetch(url);
-    const posts = await res.json();
-
-    if (!posts || posts.length === 0) {
-      feed.innerHTML = '<div class="bg-white p-10 rounded-lg border text-center text-gray-500">No posts found in this category.</div>';
-      return;
-    }
-
-    feed.innerHTML = "";
-    posts.forEach(post => {
-      const article = document.createElement("article");
-      article.className = "bg-white p-6 rounded-lg border hover:shadow-sm transition";
-      
-      const categoriesHtml = post.Category ? post.Category.map(c => 
-        `<span class="text-xs bg-indigo-50 text-indigo-600 px-2 py-1 rounded">#${c.Name}</span>`
-      ).join(" ") : "";
-
-      article.innerHTML = `
-        <div class="flex flex-wrap gap-2 mb-3">${categoriesHtml}</div>
-        <h3 class="text-xl font-semibold mb-2">${post.Title}</h3>
-        <p class="text-gray-600 mb-4">${post.Content}</p>
-        <div class="flex items-center justify-between text-sm text-gray-500">
-          <span>By ${post.Username || 'Anonymous'} • ${new Date(post.CreatedAt).toLocaleDateString()}</span>
-          <div class="flex gap-4">
-            <span title="Likes">👍 ${post.Likes || 0}</span>
-            <span title="Dislikes">👎 ${post.Dislikes || 0}</span>
-            <span title="Comments">💬 0</span>
-          </div>
-        </div>
-      `;
-      feed.appendChild(article);
-    });
-  } catch (err) {
-    feed.innerHTML = '<div class="bg-red-50 text-red-600 p-6 rounded-lg border">Failed to load posts.</div>';
-    console.error(err);
-  }
-}
-
-// --- Event Handlers ---
-
-/**
- * Handles the submission of the "Create Post" form.
- */
-document.getElementById("postForm").addEventListener("submit", async function(e) {
-  e.preventDefault();
-
-  const title = document.getElementById("title").value;
-  const content = document.getElementById("content").value;
-  const categoryCheckboxes = document.querySelectorAll('input[name="categories"]:checked');
-  const categories = Array.from(categoryCheckboxes).map(cb => cb.parentElement.innerText.trim());
-
-  const postData = {
-    Title: title,
-    Content: content,
-    category: categories
-  };
-
-  try {
-    const res = await fetch("/posts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(postData)
-    });
-
-    if (!res.ok) throw new Error("Failed to create post");
-
-    alert("Post created successfully!");
-    document.getElementById("postForm").reset();
-    loadPosts(); // Refresh feed
-
-  } catch (err) {
-    console.error(err);
-    alert("Error creating post. Make sure you are logged in.");
-  }
-});
-
-// --- Initial Load ---
-window.onload = () => {
-  loadCategories();
-  loadPosts();
-};
-</script>
+{{ template "scripts" . }}
 
 </body>
 </html>
