@@ -37,7 +37,7 @@ func (r *Repository) GetUserByEmail(email string) (User, error) {
 		&user.CreatedAt,
 	)
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return User{}, errors.New("user not found")
 	}
 
