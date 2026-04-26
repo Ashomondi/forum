@@ -47,10 +47,6 @@ function fRenderComment(c) {
     </div>
     <p class="f-body">${fEsc(c.body)}</p>
     <div class="f-actions">
-      <span class="f-likes" id="f-likes-${c.id}">${c.likes}</span>
-      <button onclick="fVote(${c.id}, 'up', this)">▲</button>
-      <button onclick="fVote(${c.id}, 'down', this)">▼</button>
-
       <span class="f-likes" id="f-likes-${c.id}">👍 ${c.likes}</span>
       <span class="f-dislikes" id="f-dislikes-${c.id}">👎 ${c.dislikes}</span>
 
