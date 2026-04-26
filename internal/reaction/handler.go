@@ -34,10 +34,14 @@ func (h *Handler) React(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	reactionType := r.FormValue("type")
-
-	// Validate reaction type
-	if reactionType != "like" && reactionType != "dislike" {
+	// Convert string type to int
+	var reactionType int
+	switch r.FormValue("type") {
+	case "like":
+		reactionType = 1
+	case "dislike":
+		reactionType = -1
+	default:
 		http.Error(w, "invalid reaction type", http.StatusBadRequest)
 		return
 	}
