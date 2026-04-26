@@ -40,3 +40,8 @@ func (r *Repository) Delete(uuid string) error {
 	_, err := r.db.Exec(query, uuid)
 	return err
 }
+func (r *Repository) DeleteAllUserSessions(userID int) error {
+    query := "DELETE FROM sessions WHERE user_id = ?"
+    _, err := r.db.Exec(query, userID)
+    return err
+}

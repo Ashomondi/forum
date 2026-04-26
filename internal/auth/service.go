@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"golang.org/x/crypto/bcrypt"
@@ -11,20 +12,27 @@ type Service struct {
 	Repo *Repository
 }
 
+var (
+	ErrEmailTaken      = errors.New("email already taken")
+	ErrUsernameMissing = errors.New("username is required")
+	ErrEmailMissing    = errors.New("email is required")
+	ErrPasswordShort   = errors.New("password must be at least 8 characters")
+)
+
 func NewService(repo *Repository) *Service {
 	return &Service{Repo: repo}
 }
 
 func validateUser(user User) error {
 	if strings.TrimSpace(user.Username) == "" {
-		return errors.New("username is required")
+		return ErrUsernameMissing
 	}
 	if strings.TrimSpace(user.Email) == "" {
-		return errors.New("email is required")
+		return ErrEmailMissing
 	}
-	if len(user.Password) < 8 {
-		return errors.New("password must be at least 8 characters")
-	}
+	// if len(user.Password) < 8 {
+	// 	return ErrPasswordShort
+	// }
 	return nil
 }
 
@@ -36,7 +44,7 @@ func (s *Service) Register(user User) error {
 	_, err := s.Repo.GetUserByEmail(user.Email)
 	if err == nil {
 		// no error means user was found — email already taken
-		return ErrEmailExists
+		return ErrEmailTaken
 	}
 	if !errors.Is(err, ErrUserNotFound) {
 		// real DB error — don't proceed
@@ -59,8 +67,16 @@ func (s *Service) Login(email, password string) (User, error) {
 	}
 
 	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+		fmt.Println("Bcrypt Error:", err)
 		return User{}, ErrInvalidPassword
 	}
 
 	return user, nil
+}
+
+// auth/service.go
+
+func (s *Service) GetUserByID(id int) (User, error) {
+	// Simply calls the repository
+	return s.Repo.GetUserByID(id)
 }

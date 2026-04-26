@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"fmt"
 	"html/template"
 	"net/http"
 )
@@ -37,6 +38,32 @@ func RegisterRoutes(handler *Handler) {
 			http.NotFound(w, r)
 			return
 		}
+		// 1. Create a data container for the template
+		data := make(map[string]interface{})
+
+		// 2. Check for the session cookie
+		cookie, err := r.Cookie("session_id")
+		if err != nil {
+			data["User"] = nil
+			fmt.Println("No cookie found")
+		} else {
+			// Use the function you already wrote!
+			userID, err := handler.SessionService.ValidateSession(cookie.Value)
+			if err != nil {
+				http.SetCookie(w, &http.Cookie{Name: "session_id", MaxAge: -1})
+				data["User"] = nil
+				fmt.Println("Session invalid:", err)
+			} else {
+				// Now get the user details from your Auth/User service
+				user, err := handler.AuthService.GetUserByID(userID)
+				if err != nil {
+					fmt.Println("User not found in DB:", err)
+				} else {
+					fmt.Printf("User found: %+v\n", user)
+					data["User"] = user
+				}
+			}
+		}
 		tmpl, err := template.ParseFiles(
 			"web/templates/index.html",
 			"web/templates/components/navbar.html",
@@ -50,6 +77,6 @@ func RegisterRoutes(handler *Handler) {
 			http.Error(w, "Failed to load templates: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
-		tmpl.Execute(w, nil)
+		tmpl.Execute(w, data)
 	})
 }

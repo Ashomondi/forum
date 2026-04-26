@@ -40,34 +40,49 @@
       cursor: pointer;
     }
     button:hover { background: #15803d; }
-    .link {
+    
+    /* Error message styling */
+    #errorMessage {
+      color: #dc2626;
+      background: #fee2e2;
+      padding: 0.5rem;
+      border-radius: 4px;
+      margin-bottom: 1rem;
       text-align: center;
-      margin-top: 1rem;
+      display: none; /* Hidden by default */
     }
+
+    .link { text-align: center; margin-top: 1rem; }
     .link a { color: #2563eb; text-decoration: none; }
   </style>
 </head>
 <body>
   <div class="card">
     <h2>Register</h2>
+    
+    <div id="errorMessage"></div>
+
     <form id="regForm">
       <input type="text" id="username" placeholder="Username" required />
-      
       <input type="email" id="email" placeholder="Email" required />
       <input type="password" id="password" placeholder="Password" required />
       <input type="password" id="confirmPassword" placeholder="Confirm Password" required />
       <button type="submit">Create Account</button>
     </form>
     <div class="link">
-      <p>Already have an account? <a href="login.html">Login</a></p>
+      <p>Already have an account? <a href="/login">Login</a></p>
     </div>
   </div>
 
   <script>
     const regForm = document.getElementById('regForm');
+    const errorMessage = document.getElementById('errorMessage');
 
     regForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      
+      // Hide previous error
+      errorMessage.style.display = 'none';
 
       const username = document.getElementById('username').value;
       const email = document.getElementById('email').value;
@@ -75,7 +90,8 @@
       const confirmPassword = document.getElementById('confirmPassword').value;
 
       if (password !== confirmPassword) {
-        alert("Passwords do not match!");
+        errorMessage.innerText = "Passwords do not match!";
+        errorMessage.style.display = 'block';
         return;
       }
 
@@ -83,22 +99,22 @@
         const response = await fetch('http://localhost:8080/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            username: username, // Added username to the JSON body
-            email: email, 
-            password: password 
-          })
+          body: JSON.stringify({ username, email, password })
         });
 
+        const data = await response.json();
+
         if (response.ok) {
-          alert("Registration successful! Please login.");
-          window.location.href = "login.html";
+          alert("Registration successful!");
+          window.location.href = "/login";
         } else {
-          const data = await response.json();
-          alert("Error: " + (data.error || "Registration failed"));
+          // Display the error message from the backend
+          errorMessage.innerText = data.error || "Registration failed";
+          errorMessage.style.display = 'block';
         }
       } catch (err) {
-        alert("Server connection failed.");
+        errorMessage.innerText = "Server unreachable. Check your Go backend.";
+        errorMessage.style.display = 'block';
       }
     });
   </script>

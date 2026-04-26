@@ -2,9 +2,11 @@ package auth
 
 import (
 	"encoding/json"
-	"forum/internal/session"
 	"net/http"
 	"time"
+
+	"forum/internal/session"
+	"forum/internal/shared/middleware"
 )
 
 // UserResponse is the DTO returned to callers — never includes the password hash.
@@ -42,7 +44,11 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
-
+if err := h.AuthService.Register(user); err != nil {
+        // Send the specific error message to the frontend
+        middleware.SendError(w, err.Error(), http.StatusBadRequest)
+        return
+    }
 	if err := h.AuthService.Register(user); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -61,7 +67,8 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 
 	loggedUser, err := h.AuthService.Login(user.Email, user.Password)
 	if err != nil {
-		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		middleware.SendError(w, err.Error(), http.StatusUnauthorized)
+		//http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 		return
 	}
 
@@ -98,5 +105,5 @@ func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 		MaxAge: -1,
 	})
 
-	w.Write([]byte("logged out"))
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
