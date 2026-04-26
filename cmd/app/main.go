@@ -2,9 +2,9 @@ package main
 
 import (
 	"database/sql"
+	"html/template"
 	"log"
 	"net/http"
-	"html/template"
 
 	"forum/internal/auth"
 	"forum/internal/comment"

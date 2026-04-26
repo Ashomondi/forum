@@ -11,9 +11,16 @@ import (
 )
 
 type PostHandler struct {
-	Service *PostService
+	Service        *PostService
 	commentService comment.Service
-	templates *template.Template
+	templates      *template.Template
+}
+
+type PostDetailPageData struct {
+	Post       PostResponse
+	PostID     int
+	Comments   []comment.CommentView
+	TotalCount int
 }
 
 type CreatePostRequest struct {
@@ -24,9 +31,9 @@ type CreatePostRequest struct {
 
 func NewPostHandler(service *PostService, commentService comment.Service, templates *template.Template) *PostHandler {
 	return &PostHandler{
-		Service: service,
-		commentService: commentService, 
-		templates: templates}
+		Service:        service,
+		commentService: commentService,
+		templates:      templates}
 }
 
 // Routes inside the Handler it get to decide which action to take based on the http method.
@@ -71,7 +78,7 @@ func (handler *PostHandler) GetPosts(w http.ResponseWriter, r *http.Request) {
 
 	posts, err := handler.Service.GetPosts(category, user, likedBy)
 	if err != nil {
-		fmt.Println("Error:",err)
+		fmt.Println("Error:", err)
 		http.Error(w, "Failed to fetch posts", http.StatusInternalServerError)
 		return
 	}
@@ -84,7 +91,7 @@ func (handler *PostHandler) GetPosts(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// return a single post by that specific id
+// return a single post page by that specific id
 func (handler *PostHandler) GetPostByID(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method Not Allowed", http.StatusBadRequest)
@@ -97,35 +104,53 @@ func (handler *PostHandler) GetPostByID(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	if r.Header.Get("Accept") == "application/json" {
-        // return the post as JSON for the JS fetch 
-  
-		post, err := handler.Service.GetPostByID(id)
-		if err != nil {
-			http.Error(w, "Post Not Found", http.StatusNotFound)
-			return
-		}
+	post, err := handler.Service.GetPostByID(id)
+	if err != nil {
+		http.Error(w, "Post Not Found", http.StatusNotFound)
+		return
+	}
 
-		w.Header().Set("Content-Type", "application/json")
-        json.NewEncoder(w).Encode(post)
-
-        return
-    }
-
-	 // otherwise render the HTML template with comments
-    comments, total, err := handler.commentService.GetTopLevelComments(id, 1)
+	comments, total, err := handler.commentService.GetTopLevelComments(id, 1)
 	if err != nil {
 		http.Error(w, "could not fetch comments", http.StatusInternalServerError)
 		return
 	}
 
-	commentsSectionData := comment.CommentsSectionData{
-		PostID: id,
-		Comments: comments,
+	pageData := PostDetailPageData{
+		Post:       post,
+		PostID:     id,
+		Comments:   comment.ToCommentViews(comments),
 		TotalCount: total,
 	}
 
-    handler.templates.ExecuteTemplate(w, "post_detail", commentsSectionData)
+	if err := handler.templates.ExecuteTemplate(w, "post_detail", pageData); err != nil {
+		http.Error(w, "failed to render post detail", http.StatusInternalServerError)
+	}
+}
+
+// return a single post as JSON
+func (handler *PostHandler) GetPostByIDAPI(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method Not Allowed", http.StatusBadRequest)
+		return
+	}
+
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "invalid comment id", http.StatusBadRequest)
+		return
+	}
+
+	post, err := handler.Service.GetPostByID(id)
+	if err != nil {
+		http.Error(w, "Post Not Found", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(post); err != nil {
+		http.Error(w, "JSON encode error", http.StatusInternalServerError)
+	}
 }
 
 func (handler *PostHandler) CreatePost(w http.ResponseWriter, r *http.Request) {

@@ -18,9 +18,9 @@ type Comment struct {
 
 // View model - how the data is presented to the user
 type CommentsSectionData struct {
-	PostID      int
-	Comments    []Comment
-	TotalCount  int
+	PostID     int
+	Comments   []CommentView
+	TotalCount int
 }
 
 type CommentView struct {

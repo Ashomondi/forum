@@ -19,7 +19,7 @@ function fRenderComment(c) {
  
   div.innerHTML = `
     <div class="f-comment-header">
-      <img class="f-avatar" src="${fEsc(c.avatarURL)}" alt="${fEsc(c.authorName)}">
+      <div class="f-avatar"></div>
       <span class="f-author">${fEsc(c.authorName)}</span>
       <span class="f-time">${fEsc(c.createdAt)}</span>
     </div>
@@ -28,6 +28,22 @@ function fRenderComment(c) {
       <span class="f-likes" id="f-likes-${c.id}">${c.likes}</span>
       <button onclick="fVote(${c.id}, 'up', this)">▲</button>
       <button onclick="fVote(${c.id}, 'down', this)">▼</button>
+
+      <span class="f-likes" id="f-likes-${c.id}">👍 ${c.likes}</span>
+      <span class="f-dislikes" id="f-dislikes-${c.id}">👎 ${c.dislikes}</span>
+
+      <form action="/react" method="POST" style="display:inline;">
+        <input type="hidden" name="comment_id" value="${c.id}">
+        <input type="hidden" name="type" value="like">
+        <button type="submit">▲</button>
+      </form>
+
+      <form action="/react" method="POST" style="display:inline;">
+        <input type="hidden" name="comment_id" value="${c.id}">
+        <input type="hidden" name="type" value="dislike">
+        <button type="submit">▼</button>
+      </form>
+
       <button onclick="fToggleReply(${c.id})">Reply</button>
       ${c.replyCount > 0 ? `
         <button id="f-view-replies-${c.id}" onclick="fLoadReplies(${c.id}, this)">
@@ -43,6 +59,40 @@ function fRenderComment(c) {
       </div>
     </div>
     <div id="f-replies-${c.id}" class="f-replies"></div>
+  `;
+ 
+  return div;
+}
+
+function fRenderReply(r) {
+  const div = document.createElement('div');
+  div.className = 'f-comment';
+  div.id = 'f-comment-' + r.id;
+ 
+  div.innerHTML = `
+    <div class="f-comment-header">
+      <div class="f-avatar"></div>
+      <span class="f-author">${fEsc(r.authorName)}</span>
+      ${r.badge ? `<span class="f-badge">${fEsc(r.badge)}</span>` : ''}
+      <span class="f-time">${fEsc(r.createdAt)}</span>
+    </div>
+    <p class="f-body">${fEsc(r.body)}</p>
+    <div class="f-actions">
+     <span class="f-likes" id="f-likes-${r.id}">👍 ${r.likes}</span>
+    <span class="f-dislikes" id="f-dislikes-${r.id}">👎 ${r.dislikes}</span>
+
+    <form action="/react" method="POST" style="display:inline;">
+      <input type="hidden" name="comment_id" value="${r.id}">
+      <input type="hidden" name="type" value="like">
+      <button type="submit">▲</button>
+    </form>
+
+    <form action="/react" method="POST" style="display:inline;">
+      <input type="hidden" name="comment_id" value="${r.id}">
+      <input type="hidden" name="type" value="dislike">
+      <button type="submit">▼</button>
+    </form>
+    </div>
   `;
  
   return div;
