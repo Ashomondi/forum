@@ -10,6 +10,7 @@ import (
 	"forum/internal/post"
 	"forum/internal/session"
 	"forum/internal/shared/middleware"
+	"forum/internal/user"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -33,10 +34,14 @@ func main() {
 
 	requireAuth := middleware.RequireAuth(sessionService)
 
+	// user
+	userRepository := user.NewRepository(db)
+	userService := user.NewService(userRepository)
+
 	// comments
 	commentRepo := comment.NewRepository(db)
 	commentService := comment.NewService(commentRepo)
-	commentHandler := comment.NewHandler(commentService, sessionService)
+	commentHandler := comment.NewHandler(commentService, userService)
 	comment.RegisterRoutes(commentHandler, requireAuth)
 //post
 

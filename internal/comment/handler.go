@@ -8,16 +8,17 @@ import (
 	"strconv"
 	"time"
 
-	"forum/internal/session"
 	"forum/internal/shared/middleware"
+	"forum/internal/user"
 )
 
 type Handler struct {
 	service Service
+	userService user.Service
 }
 
-func NewHandler(service Service, sessionService *session.Service) *Handler {
-	return &Handler{service: service}
+func NewHandler(service Service, userService user.Service) *Handler {
+	return &Handler{service: service, userService: userService}
 }
 
 func formatTime(t time.Time) string {
@@ -121,6 +122,21 @@ func (h *Handler) CreateComment(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+
+	// Get user
+	user, err := h.userService.GetByID(userID)
+	if err != nil {
+		switch {
+		case errors.Is(err, ErrNotFound):
+			http.Error(w, "user not found", http.StatusNotFound)
+		default:
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	// Add their name
+	comment.Name = user.Username
 
 	view := toCommentView(*comment)
 
