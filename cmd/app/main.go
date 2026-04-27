@@ -71,7 +71,7 @@ func main() {
 
 	postservice := post.NewPostService(postRepo, catRepo, userRepo, reactionRepo)
 	posthandler := post.NewPostHandler(postservice, commentService, tmpl)
-	post.RegisterPostRoutes(posthandler, requireAuth)
+	post.RegisterPostRoutes(posthandler, requireAuth, optionalAuth)
 
 	// reaction
 	reactionService := &reaction.ReactionService{Repo: reactionRepo}

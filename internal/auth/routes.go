@@ -65,6 +65,6 @@ func RegisterRoutes(handler *Handler) {
 			}
 		}
 
-		handler.templates.ExecuteTemplate(w, "index.html", nil)
+		handler.templates.ExecuteTemplate(w, "index.html", data)
 	})
 }
