@@ -54,6 +54,6 @@ func main() {
 	reactionHandler := reaction.NewHandler(reactionService)
 	reaction.RegisterRoutes(reactionHandler, requireAuth)
 
-	log.Println("🚀 Server running on http://localhost:8080")
+	log.Println("Server running on http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
