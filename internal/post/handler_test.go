@@ -3,10 +3,12 @@ package post
 import (
 	"bytes"
 	"encoding/json"
+	"html/template"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"forum/internal/comment"
 	"forum/internal/reaction"
 	"forum/internal/shared/middleware"
 )
@@ -15,12 +17,16 @@ func TestPostHandler_CreatePost(t *testing.T) {
 	db := setupTestDB(t)
 	defer db.Close()
 
+	tmpl := template.Must(template.New("test").Parse(`hello`))
+
+	commentRepo := comment.NewRepository(db)
+	commentService := comment.NewService(commentRepo)
 	postRepo := NewPostRepository(db)
 	catRepo := NewCategoryRepository(db)
 	userRepo := NewUserRepository(db)
 	reactionRepo := &reaction.ReactionRepository{DB: db}
 	service := NewPostService(postRepo, catRepo, userRepo, reactionRepo)
-	handler := NewPostHandler(service)
+	handler := NewPostHandler(service, commentService, tmpl)
 
 	db.Exec(`INSERT INTO categories (id, name) VALUES (1, 'tech')`)
 
@@ -58,12 +64,16 @@ func TestPostHandler_GetPosts(t *testing.T) {
 	db := setupTestDB(t)
 	defer db.Close()
 
+	tmpl := template.Must(template.New("test").Parse(`hello`))
+	
+	commentRepo := comment.NewRepository(db)
+	commentService := comment.NewService(commentRepo)
 	postRepo := NewPostRepository(db)
 	catRepo := NewCategoryRepository(db)
 	userRepo := NewUserRepository(db)
 	reactionRepo := &reaction.ReactionRepository{DB: db}
 	service := NewPostService(postRepo, catRepo, userRepo, reactionRepo)
-	handler := NewPostHandler(service)
+	handler := NewPostHandler(service, commentService, tmpl)
 
 	db.Exec(`INSERT INTO categories (id, name) VALUES (1, 'tech')`)
 	service.CreatePost(1, "Post 1", "Content", []string{"tech"})
