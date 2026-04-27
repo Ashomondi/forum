@@ -30,13 +30,14 @@ func toUserResponse(u User) UserResponse {
 type Handler struct {
 	AuthService    *Service
 	SessionService *session.Service
-	templates *template.Template
+	templates      *template.Template
 }
 
-func NewHandler(authservice *Service,sessionService *session.Service, templates *template.Template) *Handler {
-	return &Handler{AuthService: authservice,
+func NewHandler(authservice *Service, sessionService *session.Service, templates *template.Template) *Handler {
+	return &Handler{
+		AuthService:    authservice,
 		SessionService: sessionService,
-		templates: templates,
+		templates:      templates,
 	}
 }
 
@@ -46,18 +47,25 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
-if err := h.AuthService.Register(user); err != nil {
-        // Send the specific error message to the frontend
-        middleware.SendError(w, err.Error(), http.StatusBadRequest)
-        return
-    }
 	if err := h.AuthService.Register(user); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		// Send the specific error message to the frontend
+		middleware.SendError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
+	// if err := h.AuthService.Register(user); err != nil {
+	// 	log.Println("err", err)
+	// 	http.Error(w, err.Error(), http.StatusBadRequest)
+	// 	return
+	// }
+
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("User registered successfully"))
+
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "User registered successfully",
+	})
+
 }
 
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
@@ -70,7 +78,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	loggedUser, err := h.AuthService.Login(user.Email, user.Password)
 	if err != nil {
 		middleware.SendError(w, err.Error(), http.StatusUnauthorized)
-		//http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		// http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 		return
 	}
 
