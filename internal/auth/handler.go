@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"forum/internal/session"
-	"forum/internal/shared/middleware"
+	"forum/internal/shared/helpers"
 )
 
 // UserResponse is the DTO returned to callers — never includes the password hash.
@@ -49,23 +49,16 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := h.AuthService.Register(user); err != nil {
 		// Send the specific error message to the frontend
-		middleware.SendError(w, err.Error(), http.StatusBadRequest)
+		helpers.SendError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if err := h.AuthService.Register(user); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// if err := h.AuthService.Register(user); err != nil {
-	// 	log.Println("err", err)
-	// 	http.Error(w, err.Error(), http.StatusBadRequest)
-	// 	return
-	// }
-
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-
-	json.NewEncoder(w).Encode(map[string]string{
-		"message": "User registered successfully",
-	})
-
+	w.Write([]byte("User registered successfully"))
 }
 
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
@@ -77,7 +70,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 
 	loggedUser, err := h.AuthService.Login(user.Email, user.Password)
 	if err != nil {
-		middleware.SendError(w, err.Error(), http.StatusUnauthorized)
+		helpers.SendError(w, err.Error(), http.StatusUnauthorized)
 		// http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 		return
 	}
