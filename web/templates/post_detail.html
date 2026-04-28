@@ -2,67 +2,123 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Post</title>
-<link rel="stylesheet" href="/static/css/style.css">
-<link rel="stylesheet" href="/static/css/comments.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Post</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/css/comments.css">
 </head>
 <body>
+
 <nav class="navbar">
-<div class="navbar-inner">
-<span class="navbar-brand"> The Forum</span>
-<ul class="navbar-nav">
-<li><a href="/">Home</a></li>
-<li><a href="/">Posts</a></li>
-</ul>
-</div>
+  <div class="navbar-inner">
+    <span class="navbar-brand">The Forum</span>
+    <ul class="navbar-nav">
+      <li><a href="/">Home</a></li>
+      <li><a href="/">Posts</a></li>
+    </ul>
+  </div>
 </nav>
 
 <div class="container" style="padding-top: 2rem; padding-bottom: 4rem;">
-<div id="post-details" data-post-id="{{ .PostID }}">
-<div class="post-card">
 
-    <div class="post-tags">
+  <div id="post-details" data-post-id="{{ .PostID }}">
+    <div class="post-card">
+
+      <div class="post-tags">
         {{ range .Post.Category }}
-        <span class="post-tag">{{ .Name }}</span>
+          <span class="post-tag">{{ .Name }}</span>
         {{ end }}
-    </div>
+      </div>
 
-    <h1 class="post-title" style="font-size: 1.75rem;">{{ .Post.Title }}</h1>
-    <p class="post-content">{{ .Post.Content }}</p>
+      <h1 class="post-title" style="font-size: 1.75rem;">
+        {{ .Post.Title }}
+      </h1>
 
-    <div class="post-meta">
-        <span>by <strong>{{ .Post.Username }}</strong></span>
+      <p class="post-content">
+        {{ .Post.Content }}
+      </p>
+
+      <div class="post-meta">
+        <span>
+          by <strong>{{ .Post.Username }}</strong>
+        </span>
 
         <div class="post-actions">
 
-            <form action="/react" method="POST" style="display:inline;">
-                <input type="hidden" name="post_id" value="{{ .PostID }}">
-                <input type="hidden" name="type" value="like">
-                <button type="submit">👍 {{ .Post.Likes }}</button>
-            </form>
+          <form action="/react" method="POST" class="reaction-form" style="display:inline;">
+            <input type="hidden" name="post_id" value="{{ .PostID }}">
+            <input type="hidden" name="type" value="like">
+            <button type="submit">
+              👍 <span id="post-like-count">{{ .Post.Likes }}</span>
+            </button>
+          </form>
 
-            <form action="/react" method="POST" style="display:inline;">
-                <input type="hidden" name="post_id" value="{{ .PostID }}">
-                <input type="hidden" name="type" value="dislike">
-                <button type="submit">👎 {{ .Post.Dislikes }}</button>
-            </form>
+          <form action="/react" method="POST" class="reaction-form" style="display:inline;">
+            <input type="hidden" name="post_id" value="{{ .PostID }}">
+            <input type="hidden" name="type" value="dislike">
+            <button type="submit">
+              👎 <span id="post-dislike-count">{{ .Post.Dislikes }}</span>
+            </button>
+          </form>
+
         </div>
+      </div>
+
     </div>
+  </div>
 
-</div>
-</div>
-
-{{ template "f_comments_section" . }}
+  {{ template "f_comments_section" . }}
 
 </div>
 
 <footer class="footer">
-<div class="container">Forum &copy; 2026</div>
+  <div class="container">
+    Forum &copy; 2026
+  </div>
 </footer>
 
 <script src="/static/js/comments.js"></script>
+
+<!-- ============================= -->
+<!-- Reaction Handling (NO REDIRECT) -->
+<!-- ============================= -->
+<script>
+document.addEventListener("submit", async function (e) {
+  const form = e.target;
+
+  if (!form.classList.contains("reaction-form")) return;
+
+  e.preventDefault();
+  e.stopPropagation();
+
+  try {
+    const res = await fetch(form.action, {
+      method: "POST",
+      body: new FormData(form),
+      credentials: "same-origin"
+    });
+
+    if (res.status === 401) {
+      alert("You must be logged in to react.");
+      return;
+    }
+
+    if (!res.ok) {
+      alert("Failed to react.");
+      return;
+    }
+
+    // Simple & reliable for post detail
+    location.reload();
+
+  } catch (err) {
+    console.error(err);
+    alert("Network error. Please try again.");
+  }
+});
+</script>
+
 </body>
 </html>
 {{ end }}

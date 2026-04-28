@@ -25,7 +25,11 @@ func (h *Handler) React(w http.ResponseWriter, r *http.Request) {
 	// Auth check
 	userID, ok := middleware.GetUserID(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "You must be logged in to react",
+		})
 		return
 	}
 
@@ -117,26 +121,26 @@ func (h *Handler) GetCommentReactionCounts(w http.ResponseWriter, r *http.Reques
 }
 
 func (h *Handler) GetPostReactionCounts(w http.ResponseWriter, r *http.Request) {
-    if r.Method != http.MethodGet {
-        http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-        return
-    }
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 
-    postID, err := strconv.Atoi(r.PathValue("id"))
-    if err != nil {
-        http.Error(w, "invalid post id", http.StatusBadRequest)
-        return
-    }
+	postID, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "invalid post id", http.StatusBadRequest)
+		return
+	}
 
-    likes, dislikes, err := h.ReactionService.GetPostReactionCounts(postID)
-    if err != nil {
-        http.Error(w, "could not fetch counts", http.StatusInternalServerError)
-        return
-    }
+	likes, dislikes, err := h.ReactionService.GetPostReactionCounts(postID)
+	if err != nil {
+		http.Error(w, "could not fetch counts", http.StatusInternalServerError)
+		return
+	}
 
-    w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(struct {
-        Likes    int `json:"likes"`
-        Dislikes int `json:"dislikes"`
-    }{likes, dislikes})
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(struct {
+		Likes    int `json:"likes"`
+		Dislikes int `json:"dislikes"`
+	}{likes, dislikes})
 }

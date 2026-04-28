@@ -1,32 +1,27 @@
 {{define "scripts"}}
 <script>
-// --- Data Loading Functions ---
-
-/**
- * Fetches all categories from the server and populates:
- * 1. The sidebar filter list
- * 2. The post creation form checkboxes
- */
+// ================================
+// Category Loading
+// ================================
 async function loadCategories() {
   try {
     const res = await fetch("/categories");
     const categories = await res.json();
+
     const list = document.getElementById("categoryList");
     const formCategories = document.getElementById("createPostCategories");
 
     categories.forEach(cat => {
-      // 1. Add to Sidebar (Filters)
       if (list) {
         const li = document.createElement("li");
         li.innerHTML = `
-          <button onclick="loadPosts({category: '${cat.Name}'})">
+          <button onclick="loadPosts({ category: '${cat.Name}' })">
             # ${cat.Name}
           </button>
         `;
         list.appendChild(li);
       }
 
-      // 2. Add to Create Post Form (Checkboxes)
       if (formCategories) {
         const label = document.createElement("label");
         label.className = "checkbox-label";
@@ -42,136 +37,150 @@ async function loadCategories() {
   }
 }
 
-/**
- * Fetches and displays posts. 
- * filter: { category?: string, user?: string, liked?: boolean }
- */
+// ================================
+// Post Loading
+// ================================
 async function loadPosts(filter = {}) {
   const feed = document.getElementById("postFeed");
   feed.innerHTML = '<div class="empty-state">Loading posts...</div>';
 
   try {
-    let queryParams = new URLSearchParams();
-    if (filter.category) queryParams.append("category", filter.category);
-    if (filter.user) queryParams.append("user", filter.user);
-    if (filter.liked) queryParams.append("liked", "true");
+    const params = new URLSearchParams();
+    if (filter.category) params.append("category", filter.category);
+    if (filter.user) params.append("user", filter.user);
+    if (filter.liked) params.append("liked", "true");
 
-    const url = "/posts" + (queryParams.toString() ? "?" + queryParams.toString() : "");
-
-    const res = await fetch(url);
+    const res = await fetch("/posts" + (params.toString() ? `?${params}` : ""));
     const posts = await res.json();
 
     if (!posts || posts.length === 0) {
-      feed.innerHTML = '<div class="card empty-state">No posts found in this category.</div>';
+      feed.innerHTML = '<div class="card empty-state">No posts found.</div>';
       return;
     }
 
     feed.innerHTML = "";
+
     posts.forEach(post => {
       const article = document.createElement("article");
       article.className = "post-card";
       article.tabIndex = 0;
       article.style.cursor = "pointer";
-      
-      const categoriesHtml = post.Category ? post.Category.map(c => 
-        `<span class="post-tag">#${c.Name}</span>`
-      ).join(" ") : "";
+
+      const categoriesHtml = post.Category
+        ? post.Category.map(c => `<span class="post-tag">#${c.Name}</span>`).join(" ")
+        : "";
 
       article.innerHTML = `
         <div class="post-tags">${categoriesHtml}</div>
         <h3 class="post-title">${post.Title}</h3>
         <p class="post-content">${post.Content}</p>
+
         <div class="post-meta">
-          <span>By ${post.Username || 'Anonymous'} • ${new Date(post.CreatedAt).toLocaleDateString()}</span>
+          <span>
+            By ${post.Username || "Anonymous"} •
+            ${new Date(post.CreatedAt).toLocaleDateString()}
+          </span>
+
           <div class="post-actions">
-            <form action="/react" method="POST" style="display:inline;">
-                <input type="hidden" name="post_id" value="${post.ID}">
-                <input type="hidden" name="type" value="like">
-                <button type="submit">👍 ${post.Likes || 0}</button>
+            <form class="reaction-form" action="/react" method="POST">
+              <input type="hidden" name="post_id" value="${post.ID}">
+              <input type="hidden" name="type" value="like">
+              <button type="submit">👍 ${post.Likes || 0}</button>
             </form>
 
-            <form action="/react" method="POST" style="display:inline;">
-                <input type="hidden" name="post_id" value="${post.ID}">
-                <input type="hidden" name="type" value="dislike">
-                <button type="submit">👎 ${post.Dislikes || 0} </button>
+            <form class="reaction-form" action="/react" method="POST">
+              <input type="hidden" name="post_id" value="${post.ID}">
+              <input type="hidden" name="type" value="dislike">
+              <button type="submit">👎 ${post.Dislikes || 0}</button>
             </form>
-            
-            <span class="post-comments-link" title="Comments">💬</span>
+
+            <span class="post-comments-link">💬</span>
           </div>
         </div>
       `;
 
+      // ---- Navigation ----
       article.addEventListener("click", () => {
         window.location.href = `/posts/${post.ID}`;
       });
 
-      article.addEventListener("keydown", (event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
+      article.addEventListener("keydown", e => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
           window.location.href = `/posts/${post.ID}`;
         }
       });
 
-      const commentsLink = article.querySelector(".post-comments-link");
-      if (commentsLink) {
-        commentsLink.style.cursor = "pointer";
-        commentsLink.addEventListener("click", (event) => {
-          event.stopPropagation();
-          window.location.href = `/posts/${post.ID}#f-comments`;
-        });
-
-        commentsLink.addEventListener("mouseenter", () => {
-          commentsLink.style.backgroundColor = "var(--primary-light)";
-          commentsLink.style.color = "var(--primary)";
-          commentsLink.style.transform = "scale(1.05)";
-        });
-
-        commentsLink.addEventListener("mouseleave", () => {
-          commentsLink.style.backgroundColor = "";
-          commentsLink.style.color = "";
-          commentsLink.style.transform = "";
-        });
-      }
-
-      article.addEventListener("mouseenter", () => {
-        article.style.boxShadow = "var(--shadow-md)";
-        article.style.transform = "translateY(-2px)";
-        article.style.borderColor = "var(--primary-light)";
+      // ---- Prevent reaction clicks from navigating ----
+      article.querySelectorAll(".reaction-form, .reaction-form button").forEach(el => {
+        el.addEventListener("click", e => e.stopPropagation());
       });
 
-      article.addEventListener("mouseleave", () => {
-        article.style.boxShadow = "";
-        article.style.transform = "";
-        article.style.borderColor = "";
+      // ---- Comments link ----
+      const commentsLink = article.querySelector(".post-comments-link");
+      commentsLink.addEventListener("click", e => {
+        e.stopPropagation();
+        window.location.href = `/posts/${post.ID}#f-comments`;
       });
 
       feed.appendChild(article);
     });
   } catch (err) {
-    feed.innerHTML = '<div class="card empty-state" style="color: red;">Failed to load posts.</div>';
     console.error(err);
+    feed.innerHTML = '<div class="card empty-state" style="color:red">Failed to load posts.</div>';
   }
 }
 
-// --- Event Handlers ---
+// ================================
+// Reaction Handler (NO REDIRECT)
+// ================================
+document.addEventListener("submit", async e => {
+  const form = e.target;
 
-/**
- * Handles the submission of the "Create Post" form.
- */
+  if (!form.classList.contains("reaction-form")) return;
+
+  e.preventDefault();
+  e.stopPropagation();
+
+  try {
+    const res = await fetch(form.action, {
+      method: "POST",
+      body: new FormData(form),
+      credentials: "same-origin"
+    });
+
+    if (res.status === 401) {
+      alert("You must be logged in to react.");
+      return;
+    }
+
+    if (!res.ok) {
+      alert("Failed to react.");
+      return;
+    }
+
+    loadPosts(); // refresh counts
+  } catch (err) {
+    console.error(err);
+    alert("Network error.");
+  }
+});
+
+// ================================
+// Create Post
+// ================================
 const postForm = document.getElementById("postForm");
 
 if (postForm) {
-  postForm.addEventListener("submit", async function(e) {
+  postForm.addEventListener("submit", async e => {
     e.preventDefault();
 
-    const title = document.getElementById("title").value;
-    const content = document.getElementById("content").value;
-    const categoryCheckboxes = document.querySelectorAll('input[name="categories"]:checked');
-    const categories = Array.from(categoryCheckboxes).map(cb => cb.parentElement.innerText.trim());
+    const categories = [...document.querySelectorAll('input[name="categories"]:checked')]
+      .map(cb => cb.parentElement.innerText.trim());
 
     const postData = {
-      Title: title,
-      Content: content,
+      Title: document.getElementById("title").value,
+      Content: document.getElementById("content").value,
       category: categories
     };
 
@@ -182,23 +191,23 @@ if (postForm) {
         body: JSON.stringify(postData)
       });
 
-      if (!res.ok) throw new Error("Failed to create post");
+      if (!res.ok) throw new Error();
 
       alert("Post created successfully!");
       postForm.reset();
       loadPosts();
-    } catch (err) {
-      console.error(err);
-      alert("Error creating post. Make sure you are logged in.");
+    } catch {
+      alert("You must be logged in to create a post.");
     }
   });
 }
 
-// --- Initial Load ---
+// ================================
+// Initial Load
+// ================================
 window.onload = () => {
   loadCategories();
   loadPosts();
 };
-
 </script>
 {{end}}
