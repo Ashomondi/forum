@@ -1,5 +1,4 @@
-
-# Gopher Forum 
+# The Forum 
 
 A lightweight, feature-rich forum application built with **Go** and **SQLite**. This project follows a clean, modular architecture (DDD-lite) to ensure scalability and maintainability.
 
