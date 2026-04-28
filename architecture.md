@@ -12,7 +12,7 @@ forum/
 │   └── server/
 │       └── main.go           # Entry point: Initializes DB and starts the server
 ├── internal/
-│   ├── user/                 # Domain: Registration, Login, Profiles
+│   ├── auth/                 # Domain: Registration, Login, Profiles
 │   │   ├── handler.go        # HTTP logic (parsing forms)
 │   │   ├── service.go        # Business logic (Bcrypt, validation)
 │   │   └── repository.go     # SQL queries for 'users' table
@@ -24,13 +24,12 @@ forum/
 │   │   ├── handler.go
 │   │   ├── service.go
 │   │   └── repository.go
-│   ├── interaction/          # Domain: Likes and Dislikes
+│   ├── reaction/          # Domain: Likes and Dislikes
 │   │   ├── service.go        # Toggle logic (prevents double-voting)
 │   │   └── repository.go
 │   ├── session/              # Domain: Security and Cookies
 │   │   ├── service.go        # UUID generation and expiry check
 │   │   └── repository.go
-│   ├── models/               # Shared Data Structs (User, Post, etc.)
 │   └── database/             # SQLite Driver setup & Migration runner
 ├── migrations/               # SQL files (001_initial_schema.sql)
 ├── web/
