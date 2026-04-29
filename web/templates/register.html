@@ -63,10 +63,10 @@
     <div id="errorMessage"></div>
 
     <form id="regForm">
-      <input type="text" id="username" placeholder="Username" required />
-      <input type="email" id="email" placeholder="Email" required />
-      <input type="password" id="password" placeholder="Password" required />
-      <input type="password" id="confirmPassword" placeholder="Confirm Password" required />
+      <input type="text" id="username" placeholder="Username" />
+      <input type="email" id="email" placeholder="Email" />
+      <input type="password" id="password" placeholder="Password"  />
+      <input type="password" id="confirmPassword" placeholder="Confirm Password"/>
       <button type="submit">Create Account</button>
     </form>
     <div class="link">
@@ -88,7 +88,11 @@
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
       const confirmPassword = document.getElementById('confirmPassword').value;
-
+  if (!username) {
+        errorMessage.innerText = "username is required";
+        errorMessage.style.display = 'block';
+        return;
+      }
       if (password !== confirmPassword) {
         errorMessage.innerText = "Passwords do not match!";
         errorMessage.style.display = 'block';
