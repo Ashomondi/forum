@@ -3,6 +3,7 @@ package auth
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"golang.org/x/crypto/bcrypt"
@@ -16,6 +17,7 @@ var (
 	ErrEmailTaken      = errors.New("email already taken")
 	ErrUsernameTaken   = errors.New("username already taken")
 	ErrUsernameMissing = errors.New("username is required")
+	ErrEmailInvalid    = errors.New("invalid email format")
 	ErrEmailMissing    = errors.New("email is required")
 	ErrPasswordShort   = errors.New("password must be at least 8 characters")
 )
@@ -24,12 +26,19 @@ func NewService(repo UserRepo) *Service {
 	return &Service{Repo: repo}
 }
 
+var emailRegex = regexp.MustCompile(
+	`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`,
+)
+
 func validateUser(user User) error {
 	if strings.TrimSpace(user.Username) == "" {
 		return ErrUsernameMissing
 	}
 	if strings.TrimSpace(user.Email) == "" {
 		return ErrEmailMissing
+	}
+	if !emailRegex.MatchString(user.Email) {
+		return ErrEmailInvalid
 	}
 	if len(user.Password) < 8 {
 		return ErrPasswordShort
